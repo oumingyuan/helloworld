@@ -7,7 +7,7 @@ compatibility_date = "2025-10-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "helloworld"
-database_id = "00000000-0000-0000-0000-000000000001"
+database_id = "5d774874-aa53-45e0-b87e-45c36f110ae8"
 
 [assets]
 directory = "./public"

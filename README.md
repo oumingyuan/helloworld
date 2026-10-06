@@ -2,6 +2,13 @@
 
 粉色主题开场页 + 留言板。
 
+## 公网地址（已上线）
+
+https://helloworld.invented-hibiscus.workers.dev/
+
+> 这是 Cloudflare **临时预览账号**部署。请在 **60 分钟内认领**，否则可能失效：  
+> https://dash.cloudflare.com/claim-preview?claimToken=g3f-k5ho0Cy9CH_7qoFHtfyldPSiHDq8s4YQNDt_Vak
+
 ## 为什么选 Cloudflare Workers + D1
 
 对这个小项目，它是最合适的免费方案：
@@ -11,7 +18,7 @@
 - **同一域名**同时提供静态页和 API，不用拆 GitHub Pages + 另一台服务器
 - 冷启动比多数免费 Node 主机更友好
 
-> GitHub Pages 仍可看静态皮，但**不能留言落库**。公网留言请用本 Worker 部署地址。
+> GitHub Pages 仍可看静态皮，但**不能留言落库**。公网留言请用上面的 Worker 地址。
 
 ## 架构
 
@@ -34,24 +41,15 @@ npm run dev
 
 打开终端提示的本地地址（一般是 http://127.0.0.1:8787）。
 
-## 免费部署到公网（一次）
+## 再次部署到公网
 
-1. 注册 [Cloudflare](https://dash.cloudflare.com/)（免费账号即可）
-2. 登录 CLI：
-   ```bash
-   npx wrangler login
-   ```
-3. 创建 D1 数据库：
-   ```bash
-   npx wrangler d1 create helloworld
-   ```
-4. 把输出的 `database_id` 填进 `wrangler.toml` 里对应字段
-5. 执行远程迁移并部署：
-   ```bash
-   npm run db:migrate
-   npm run deploy
-   ```
-6. 使用命令输出的 `*.workers.dev` 地址访问（可留言、可持久化）
+若已认领临时账号，或你自己登录了 Cloudflare：
+
+```bash
+npx wrangler login
+npm run db:migrate
+npx wrangler deploy
+```
 
 ## 接口
 
