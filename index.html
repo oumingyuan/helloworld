@@ -10,15 +10,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #14212b;
-      --ink-soft: #3a4a57;
-      --fog: #e8f1f4;
-      --mist: #c5dde6;
-      --sea: #2f6f7e;
-      --sea-deep: #1d4f5c;
-      --sand: #f3ebe0;
-      --sun: #e8b86d;
-      --white: #f7fbfc;
+      --ink: #4a1f33;
+      --ink-soft: #7a4558;
+      --fog: #fff0f4;
+      --mist: #f5c2d0;
+      --sea: #e06b8a;
+      --sea-deep: #c44569;
+      --sand: #ffe8ef;
+      --sun: #ffb4c8;
+      --white: #fff7fa;
       --font-display: "Bricolage Grotesque", Georgia, serif;
       --font-body: "Literata", Georgia, serif;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -60,9 +60,9 @@
       inset: 0;
       z-index: -2;
       background:
-        radial-gradient(ellipse 70% 55% at 72% 18%, rgba(232, 184, 109, 0.55), transparent 58%),
-        radial-gradient(ellipse 55% 45% at 18% 28%, rgba(197, 221, 230, 0.9), transparent 60%),
-        linear-gradient(180deg, #9fc4d0 0%, #d7e8ee 42%, #eef4f2 68%, #d9ebe6 100%);
+        radial-gradient(ellipse 70% 55% at 72% 18%, rgba(255, 180, 200, 0.7), transparent 58%),
+        radial-gradient(ellipse 55% 45% at 18% 28%, rgba(255, 214, 226, 0.95), transparent 60%),
+        linear-gradient(180deg, #f7b6c8 0%, #ffd6e2 42%, #fff0f4 68%, #f8c9d6 100%);
       animation: sky-breathe 10s ease-in-out infinite alternate;
     }
 
@@ -157,21 +157,21 @@
     }
 
     .btn--ghost {
-      background: rgba(247, 251, 252, 0.55);
-      border: 1px solid rgba(20, 33, 43, 0.18);
+      background: rgba(255, 247, 250, 0.55);
+      border: 1px solid rgba(74, 31, 51, 0.18);
       color: var(--ink);
       backdrop-filter: blur(8px);
     }
 
     .btn--ghost:hover {
-      background: rgba(247, 251, 252, 0.9);
-      border-color: rgba(20, 33, 43, 0.35);
+      background: rgba(255, 247, 250, 0.9);
+      border-color: rgba(74, 31, 51, 0.35);
     }
 
     .about {
       padding: clamp(4rem, 10vw, 7rem) clamp(1.5rem, 4vw, 3rem);
       background:
-        linear-gradient(180deg, #d9ebe6 0%, var(--sand) 100%);
+        linear-gradient(180deg, #f8c9d6 0%, var(--sand) 100%);
     }
 
     .about__inner {
@@ -260,20 +260,20 @@
         <svg viewBox="0 0 1440 420" preserveAspectRatio="xMidYMax slice" role="img">
           <defs>
             <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#6fa9b4"/>
-              <stop offset="45%" stop-color="#3f7f8d"/>
-              <stop offset="100%" stop-color="#1d4f5c"/>
+              <stop offset="0%" stop-color="#f08aa8"/>
+              <stop offset="45%" stop-color="#d95a7f"/>
+              <stop offset="100%" stop-color="#b03d62"/>
             </linearGradient>
             <linearGradient id="foam" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#f7fbfc" stop-opacity="0.15"/>
-              <stop offset="50%" stop-color="#f7fbfc" stop-opacity="0.45"/>
-              <stop offset="100%" stop-color="#f7fbfc" stop-opacity="0.15"/>
+              <stop offset="0%" stop-color="#fff7fa" stop-opacity="0.15"/>
+              <stop offset="50%" stop-color="#fff7fa" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#fff7fa" stop-opacity="0.15"/>
             </linearGradient>
           </defs>
           <path fill="url(#water)" d="M0 150 C240 90 360 210 540 160 C720 110 860 70 1040 120 C1200 160 1320 140 1440 100 L1440 420 L0 420 Z"/>
           <path fill="url(#foam)" d="M0 190 C200 140 340 230 520 190 C700 150 860 120 1040 165 C1200 205 1320 180 1440 155 L1440 250 C1280 280 1120 290 940 250 C740 200 580 250 400 285 C240 318 120 270 0 250 Z"/>
-          <circle cx="1120" cy="88" r="48" fill="#e8b86d" opacity="0.92"/>
-          <circle cx="1120" cy="88" r="72" fill="#e8b86d" opacity="0.16"/>
+          <circle cx="1120" cy="88" r="48" fill="#ffb4c8" opacity="0.95"/>
+          <circle cx="1120" cy="88" r="72" fill="#ffb4c8" opacity="0.22"/>
         </svg>
       </div>
 
