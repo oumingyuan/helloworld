@@ -1,22 +1,37 @@
 # Hello World
 
-粉色主题开场页 + 留言板。
+粉色主题开场页 + 留言板：页面 → API → SQLite。
 
-**国内推荐：Render 免费部署**（`*.onrender.com`，一般可直连写库）  
-Cloudflare `workers.dev` 在大陆常被拦截，仅作备选。
+**国内推荐：Render**（`*.onrender.com`）  
+Cloudflare `*.workers.dev` 在大陆常被屏蔽，不要当国内入口。
 
 ## 文档
 
-完整说明：[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)
+- 完整说明：[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)
+- Render 配置文件（仓库根目录）：[render.yaml](./render.yaml)  
+  GitHub 直链：https://github.com/oumingyuan/helloworld/blob/main/render.yaml
 
 ## 用 Render 免费上公网（推荐）
 
-1. 打开 [https://dashboard.render.com](https://dashboard.render.com) 注册（可用 GitHub 登录）
-2. **New → Blueprint**，选择本仓库 `oumingyuan/helloworld`，应用 `render.yaml`
-3. 等待 Build / Deploy 完成
-4. 打开分配的地址：`https://helloworld-xxxx.onrender.com`
+1. 打开 [Render Dashboard](https://dashboard.render.com)（可用 GitHub 登录）
+2. 点 **New → Blueprint**
+3. 选择仓库 `oumingyuan/helloworld`，分支选 `main`
+4. Render 会自动读取根目录的 **`render.yaml`**
+5. 确认创建后等待 Build / Deploy
+6. 打开分配的地址，例如：`https://helloworld-xxxx.onrender.com`  
+   在「打个招呼」里提交留言，验证写库
 
-也可 **New → Web Service** 手动填：
+### 找不到 yaml？
+
+文件就在仓库**最外层**（和 `README.md`、`package.json` 同级），文件名是：
+
+```text
+render.yaml
+```
+
+不是在 `docs/` 或 `server/` 里面。
+
+### 不用 Blueprint 时手动创建 Web Service
 
 | 项 | 值 |
 |----|-----|
@@ -24,11 +39,12 @@ Cloudflare `workers.dev` 在大陆常被拦截，仅作备选。
 | Build Command | `npm install` |
 | Start Command | `npm start` |
 | Instance | Free |
+| Health Check Path | `/api/health` |
 
-注意：
+### 免费档注意
 
-- 免费实例**一段时间无访问会休眠**，第一次打开可能要等 30–60 秒  
-- 免费盘**不持久**，重新部署后 SQLite 留言可能清空（演示够用；要持久可再接免费 Postgres）
+- 一段时间无访问会**休眠**，冷启动可能 30–60 秒
+- 磁盘**不持久**，重新部署后 SQLite 留言可能被清空（演示够用）
 
 ## 本地运行（可写库）
 
@@ -41,15 +57,23 @@ npm start
 
 ## 备选：Cloudflare Workers + D1
 
+仅建议绑**自己的域名**后给国内用；裸 `workers.dev` 不可用。
+
 ```bash
 npm run db:migrate:local
 npm run dev
 ```
-
-公网需自有域名绑 Worker；不要依赖裸 `*.workers.dev` 给国内用户。
 
 ## 接口
 
 - `GET /api/health`
 - `GET /api/greetings`
 - `POST /api/greetings` body: `{ "name", "message" }`
+
+## 相关地址
+
+| 用途 | 地址 |
+|------|------|
+| 仓库 | https://github.com/oumingyuan/helloworld |
+| 静态预览（不能写库） | https://oumingyuan.github.io/helloworld/ |
+| Render 控制台 | https://dashboard.render.com |

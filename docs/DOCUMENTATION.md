@@ -1,92 +1,69 @@
 # Hello World 项目完整文档
 
-本文档覆盖本仓库的目标、架构、数据库接法、本地开发、公网部署、接口说明、常见问题与目录结构。
+本文档覆盖项目目标、架构、数据库、本地开发、**Render 公网部署**、Cloudflare 备选、接口、国内网络问题与 FAQ。
 
 ---
 
 ## 1. 项目简介
 
-这是一个粉色主题的 **Hello World 开场页**，并示范最常见的数据链路：
+粉色主题 **Hello World** 开场页，并示范：
 
 **浏览器页面 → 后端 API → 数据库**
 
-当前推荐公网方案为：
-
-**Cloudflare Workers（页面 + API）+ D1（托管 SQLite）**
-
 | 能力 | 说明 |
 |------|------|
-| 静态开场页 | 品牌标题、文案、动效、粉色海平线视觉 |
-| 留言板 | 提交昵称/留言，写入数据库并可回读 |
-| 免费公网 | Workers + D1 免费额度适合小流量演示 |
+| 开场页 | 品牌标题、文案、动效、粉色海平线 |
+| 留言板 | 昵称 + 留言写入 SQLite，可回读 |
+| 国内公网 | **Render 免费档**（推荐） |
+| 静态预览 | GitHub Pages（**不能写库**） |
 
-静态预览（仅页面，**不能写库**）：
-
-https://oumingyuan.github.io/helloworld/
-
-带数据库的 Worker 地址（以实际部署为准）：
-
-https://helloworld.invented-hibiscus.workers.dev/
+静态预览：https://oumingyuan.github.io/helloworld/
 
 ---
 
-## 2. 为什么这样接数据库
+## 2. 当前推荐方案
 
-GitHub Pages **只能托管静态文件**，浏览器里不能、也不该直接连接传统数据库（没有服务端、密钥会暴露）。
+| 场景 | 方案 |
+|------|------|
+| **国内用户写库** | Render：`Express` + `better-sqlite3`，配置见根目录 `render.yaml` |
+| 本地开发 | `npm start` → http://localhost:3000 |
+| 仅看页面 | GitHub Pages |
+| 备选公网 | Cloudflare Workers + D1（**必须绑自有域名**；勿用裸 `workers.dev`） |
 
-因此采用：
+### 为啥不再主推 workers.dev？
 
-```text
-页面 (public/index.html)
-    │  fetch /api/greetings
-    ▼
-API (Cloudflare Worker / 可选本机 Express)
-    │  SQL
-    ▼
-数据库 (D1 或本机 SQLite 文件)
-```
-
-选型对比（本项目结论）：
-
-| 方案 | 是否免费友好 | 数据是否易持久 | 适不适合本项目 |
-|------|--------------|----------------|----------------|
-| GitHub Pages 直连数据库 | — | — | 不可行 |
-| Render 跑 Express + 本地 SQLite | 有免费档 | 免费盘常不持久 | 一般 |
-| Cloudflare Workers + D1 | 是 | 是 | **最合适** |
-| Vercel + Turso / Supabase | 是 | 是 | 也可，但组件更多 |
+大陆对 `*.workers.dev` 存在屏蔽（DNS 污染 / 连接干扰）。表现为：外网能写库，国内不能。  
+数据库逻辑本身正常；问题在网络可达性。详见第 9 节。
 
 ---
 
 ## 3. 架构说明
 
-### 3.1 推荐架构（公网）
+### 3.1 推荐架构（Render / 本机 Node）
+
+```text
+用户浏览器
+    │
+    ▼
+Express (server/index.js)
+    ├── 静态页  →  public/index.html
+    └── /api/*  →  better-sqlite3 → data/helloworld.sqlite
+```
+
+同一域名同时提供页面和 API，前端默认请求同源 `/api/greetings`。
+
+### 3.2 备选架构（Cloudflare）
 
 ```text
 用户浏览器
     │
     ▼
 Cloudflare Worker (src/worker.js)
-    ├── 静态资源  →  public/index.html
-    └── /api/*    →  D1 数据库绑定 env.DB
+    ├── 静态资源  →  public/
+    └── /api/*    →  D1 (env.DB)
 ```
 
-- 页面与接口**同一域名**，避免跨域配置麻烦。
-- D1 语义接近 SQLite，迁移成本低。
-- Worker 内会执行 `CREATE TABLE IF NOT EXISTS`，降低“表不存在”导致的写库失败。
-
-### 3.2 可选架构（仅本机）
-
-```text
-用户浏览器
-    │
-    ▼
-Express (server/index.js)  同时托管静态页
-    │
-    ▼
-better-sqlite3 → data/helloworld.sqlite
-```
-
-适合本地快速实验，**不适合**直接当长期公网方案（除非另外部署 Node 主机）。
+国内请使用 **Custom Domain**，不要使用 `*.workers.dev`。
 
 ---
 
@@ -95,22 +72,42 @@ better-sqlite3 → data/helloworld.sqlite
 ```text
 .
 ├── README.md                 # 快速入门
+├── render.yaml               # Render Blueprint（国内部署用，在仓库根目录）
 ├── docs/
 │   └── DOCUMENTATION.md      # 本完整文档
-├── package.json              # 脚本与依赖
-├── wrangler.toml             # Cloudflare Worker / D1 配置
-├── migrations/
-│   └── 0001_init.sql         # D1 初始表结构
-├── src/
-│   └── worker.js             # Worker：静态页 + API + D1
+├── package.json
 ├── public/
-│   └── index.html            # 前端页面（Worker 静态资源）
-├── index.html                # 与 public 同步，便于 GitHub Pages 预览
+│   └── index.html            # 前端页面
 ├── server/
-│   ├── index.js              # 可选：Express 入口
-│   └── db.js                 # 可选：本机 SQLite 封装
-└── data/                     # 本机 SQLite 数据目录（gitignore）
+│   ├── README.md
+│   ├── index.js              # Express 入口（Render / 本地默认）
+│   └── db.js                 # SQLite 封装
+├── src/
+│   └── worker.js             # Cloudflare Worker（备选）
+├── migrations/
+│   └── 0001_init.sql         # D1 迁移（仅 Workers 用）
+├── wrangler.toml             # Cloudflare 配置（备选）
+├── index.html                # 同步给 GitHub Pages 的静态副本
+└── data/                     # SQLite 数据目录（gitignore）
 ```
+
+### `render.yaml` 在哪？
+
+- 路径：**仓库根目录** `/render.yaml`（与 `README.md` 同级）
+- 网页：https://github.com/oumingyuan/helloworld/blob/main/render.yaml
+- 作用：Render **Blueprint** 自动读取，创建 Free Web Service
+
+当前内容概要：
+
+| 字段 | 值 |
+|------|-----|
+| `name` | `helloworld` |
+| `runtime` | `node` |
+| `plan` | `free` |
+| `region` | `singapore` |
+| `buildCommand` | `npm install` |
+| `startCommand` | `npm start` |
+| `healthCheckPath` | `/api/health` |
 
 ---
 
@@ -121,274 +118,201 @@ better-sqlite3 → data/helloworld.sqlite
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `id` | INTEGER PK AUTOINCREMENT | 主键 |
-| `name` | TEXT NOT NULL | 昵称，最长约 40 字符（接口层截断） |
-| `message` | TEXT NOT NULL | 留言，最长约 200 字符（接口层截断） |
+| `name` | TEXT NOT NULL | 昵称（接口截断约 40 字） |
+| `message` | TEXT NOT NULL | 留言（接口截断约 200 字） |
 | `created_at` | TEXT NOT NULL | 默认 `datetime('now')` |
 
-初始化 SQL 见 `migrations/0001_init.sql`。
+- Express / Render：启动时 `CREATE TABLE IF NOT EXISTS`  
+- D1：见 `migrations/0001_init.sql`，Worker 内也会尝试自动建表  
 
 ---
 
 ## 6. HTTP 接口
 
-基址：
+基址示例：
 
+- 本地 Express：`http://127.0.0.1:3000`
+- Render：`https://<你的服务>.onrender.com`
 - 本地 Worker：`http://127.0.0.1:8787`
-- 公网 Worker：`https://<你的>.workers.dev`
-- 本机 Express：`http://127.0.0.1:3000`
 
 ### 6.1 健康检查
 
 `GET /api/health`
 
-成功示例：
-
 ```json
-{ "ok": true, "database": "cloudflare-d1" }
+{ "ok": true, "database": "...", "host": "node" }
 ```
+
+Render 上 `host` 可能为 `"render"`。
 
 ### 6.2 读取留言
 
-`GET /api/greetings`
-
-成功示例：
-
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "name": "小明",
-      "message": "Hello",
-      "created_at": "2026-10-06 08:00:00"
-    }
-  ]
-}
-```
+`GET /api/greetings` → `{ "items": [ ... ] }`
 
 ### 6.3 写入留言
 
 `POST /api/greetings`  
 `Content-Type: application/json`
 
-请求体：
-
 ```json
 { "name": "小明", "message": "Hello" }
 ```
 
-成功：`201`
-
-```json
-{
-  "item": {
-    "id": 1,
-    "name": "小明",
-    "message": "Hello",
-    "created_at": "2026-10-06 08:00:00"
-  }
-}
-```
-
-失败示例：
-
-- `400`：未填昵称或留言  
-- `500`：数据库异常（响应中可能含 `detail`）
+成功 `201`，返回 `{ "item": { ... } }`。
 
 ---
 
 ## 7. 本地开发
 
-### 7.1 环境要求
+### 7.1 环境
 
 - Node.js 18+
 - npm
 
-### 7.2 Cloudflare Worker + D1（推荐）
+### 7.2 Express + SQLite（默认）
 
 ```bash
 npm install
+npm start
+```
+
+打开 http://localhost:3000
+
+| 命令 | 作用 |
+|------|------|
+| `npm start` | 启动 Express（Render 同样用这条） |
+| `npm run dev:node` | 若存在：watch 模式（以 package.json 为准） |
+
+环境变量：
+
+| 变量 | 含义 | 默认 |
+|------|------|------|
+| `PORT` | HTTP 端口 | `3000`（Render 会注入） |
+| `DATABASE_PATH` | SQLite 文件完整路径 | `data/helloworld.sqlite` |
+| `DATABASE_DIR` | 数据目录（`render.yaml` 已配置） | `./data` |
+
+### 7.3 Cloudflare Worker（备选）
+
+```bash
 npm run db:migrate:local
 npm run dev
 ```
 
-浏览器打开终端提示地址（通常是 `http://127.0.0.1:8787`）。
-
-常用脚本：
-
-| 命令 | 作用 |
-|------|------|
-| `npm run dev` | 本地启动 Worker |
-| `npm run db:migrate:local` | 本地 D1 执行迁移 |
-| `npm run db:migrate` | 远程 D1 执行迁移 |
-| `npm run deploy` | 部署到 Cloudflare |
-
-### 7.3 可选：本机 Express + 文件 SQLite
-
-```bash
-npm install better-sqlite3 cors express
-npm run start:node
-```
-
-打开 `http://localhost:3000`。
-
-可用环境变量：
-
-| 变量 | 含义 | 默认 |
-|------|------|------|
-| `PORT` | HTTP 端口 | `3000` |
-| `DATABASE_PATH` | SQLite 文件路径 | `data/helloworld.sqlite` |
+通常为 http://127.0.0.1:8787
 
 ---
 
-## 8. 公网部署（Cloudflare）
+## 8. 公网部署
 
-### 8.1 首次正式部署（自有账号）
+### 8.1 Render（推荐，国内可写库）
 
-1. 注册并登录 [Cloudflare](https://dash.cloudflare.com/)
-2. 本地执行：
+1. 打开 https://dashboard.render.com  
+2. **New → Blueprint**  
+3. 连接 GitHub，选择 `oumingyuan/helloworld`，分支 `main`  
+4. 自动加载根目录 **`render.yaml`**  
+5. 创建服务，等待 Deploy  
+6. 用 `https://xxxx.onrender.com` 打开页面，测试留言  
 
-```bash
-npx wrangler login
-npx wrangler d1 create helloworld
-```
+也可手动 **New → Web Service**：
 
-3. 把输出的 `database_id` 写入 `wrangler.toml`：
+| 项 | 值 |
+|----|-----|
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Plan | Free |
+| Health Check | `/api/health` |
 
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "helloworld"
-database_id = "<你的-database-id>"
-```
+限制：
 
-4. 迁移并部署：
+- 免费实例会休眠，冷启动较慢  
+- 免费磁盘不持久，**Redeploy 可能清空留言**（演示可接受；要持久请接 Neon/Supabase 等）
 
-```bash
-npm run db:migrate
-npm run deploy
-```
+### 8.2 Cloudflare Workers + D1（备选）
 
-5. 使用命令输出的 `*.workers.dev` 地址访问。
+1. `npx wrangler login`  
+2. `npx wrangler d1 create helloworld`，把 `database_id` 写入 `wrangler.toml`  
+3. `npm run db:migrate` && `npm run deploy`  
+4. **绑定自定义域名**后再给国内用户使用  
 
-### 8.2 临时预览账号说明
-
-可用 `wrangler deploy --temporary` 在无登录情况下做临时预览。
-
-注意：
-
-- 有认领时限（通常约 60 分钟）
-- 未认领可能失效
-- 适合演示，不适合当作长期生产环境
-
-### 8.3 `wrangler.toml` 关键字段
-
-| 字段 | 含义 |
-|------|------|
-| `name` | Worker 名称 |
-| `main` | 入口脚本 |
-| `[[d1_databases]]` | D1 绑定，前端代码里用 `env.DB` |
-| `[assets]` | 静态目录 `public/` |
+不要把 `*.workers.dev` 当作国内正式入口。
 
 ---
 
-## 9. 国内网络与写库问题（重要）
+## 9. 国内网络与写库问题
 
 ### 9.1 现象
 
-- **外网 / 代理**：留言可以成功写入  
-- **国内直连 `*.workers.dev`**：常失败或超时  
+外网能写、国内不能写（针对 Cloudflare `workers.dev`）。
 
-### 9.2 原因（已核实）
+### 9.2 已核实原因
 
-1. **主因**：大陆对 `workers.dev` 整类域名屏蔽（DNS 污染 / 连接干扰），与业务代码无关  
-2. **次因**：GitHub Pages 只有静态页，同源 `/api/greetings` 不存在（405/404）
+1. **主因**：大陆屏蔽 `workers.dev`（DNS 污染 / 超时 / 连接失败）  
+2. **次因**：GitHub Pages 无 API，提交同源 `/api/greetings` 会 404/405  
 
-本机 `npm start`（Express + SQLite）读写正常，说明数据库逻辑本身没问题。
+本机与 Render（Express + SQLite）写库正常，说明业务代码可用。
 
-### 9.3 怎么办（推荐顺序）
+### 9.3 处理
 
-1. **Render 免费部署**（本仓库已提供 `render.yaml`）→ 使用 `*.onrender.com`，国内通常可直连写库  
-2. 自有域名绑定到 Cloudflare Worker（不要用裸 workers.dev）  
-3. 临时用外网验证功能  
-
-Render 注意：免费实例会休眠；免费磁盘不持久，重部署可能丢 SQLite 数据。
+1. 用 **Render**（本仓库 `render.yaml`）  
+2. 或 Worker + **自己的域名**  
+3. 不要用 GitHub Pages 测写库  
 
 ---
 
-## 10. 前端行为说明
+## 10. 前端说明
 
 页面：`public/index.html`
 
-- 默认 `API_BASE = ""`，即请求**当前站点同源** `/api/...`
-- 可通过提前设置覆盖：
-
-```html
-<script>window.HELLO_API_BASE = "https://your-api.example.com";</script>
-```
-
-- 读列表：`GET /api/greetings`
-- 提交表单：`POST /api/greetings`
-- 当网络连不上 API 时，页面会提示与国内 `workers.dev` 相关的错误说明
+- 默认 `API_BASE = ""`（同源 `/api/...`）  
+- 可覆盖：`window.HELLO_API_BASE = "https://your-api.example.com"`  
+- GitHub Pages 只有静态副本，**留言会失败**——属预期  
 
 ---
 
 ## 11. 换成 Postgres / MySQL
 
-保持前端接口路径不变，只替换服务端驱动即可。
-
-思路：
-
-1. 仍由服务端持有连接串（环境变量），**不要**写进前端  
-2. 将 D1 / `better-sqlite3` 换成 `pg`、`mysql2` 等  
-3. 建同等 `greetings` 表  
-4. `GET/POST /api/greetings` 逻辑保持兼容  
+保持 `/api/greetings` 不变，服务端换驱动（`pg` / `mysql2`），连接串放环境变量，勿写进前端。
 
 ---
 
-## 12. 常见问题 FAQ
+## 12. FAQ
 
-### Q1：GitHub Pages 能留言吗？
+### Q1：yaml 在哪？
 
-不能。Pages 无 Node/Worker 运行时。请用 Worker 地址或自建 API。
+仓库根目录 `render.yaml`：  
+https://github.com/oumingyuan/helloworld/blob/main/render.yaml
 
-### Q2：本地 `no such table: greetings`？
+### Q2：GitHub Pages 能留言吗？
 
-执行：
-
-```bash
-npm run db:migrate:local
-```
-
-Worker 版也会尝试自动建表，但迁移仍建议执行一次。
+不能。请用 Render 地址或本地 `npm start`。
 
 ### Q3：外网能写、国内不能写？
 
-见第 9 节。优先绑自定义域名或换国内可访问的托管。
+若访问的是 `workers.dev`，见第 9 节；请改用 Render。
 
 ### Q4：如何确认 API 活着？
 
 ```bash
-curl https://<你的域名>/api/health
+curl https://<你的-onrender-域名>/api/health
 ```
 
-### Q5：数据存在哪？
+### Q5：数据在哪？
 
-- Cloudflare：D1（账号下的 `helloworld` 库）  
-- 本机 Express：`data/helloworld.sqlite`（默认）
+| 环境 | 位置 |
+|------|------|
+| 本地 / Render | SQLite 文件（默认 `data/helloworld.sqlite`） |
+| Cloudflare | D1 库 `helloworld` |
+
+### Q6：Render 第一次打开很慢？
+
+免费实例休眠后的冷启动，等 30–60 秒再试。
 
 ---
 
-## 13. 安全与边界（演示项目）
+## 13. 安全边界（演示项目）
 
-本项目是教学/演示向，当前未做：
-
-- 登录鉴权  
-- 验证码 / 限流  
-- 管理后台删帖  
-- 复杂 XSS 以外的防护（前端展示已做基础转义）
-
-若用于公网长期服务，请至少增加限流、审核与备份策略。
+未做：登录、验证码、严格限流、管理删帖。  
+公网长期使用请自行加强限流与备份。
 
 ---
 
@@ -397,15 +321,17 @@ curl https://<你的域名>/api/health
 | 说明 | 链接 |
 |------|------|
 | 仓库 | https://github.com/oumingyuan/helloworld |
-| GitHub Pages 静态预览 | https://oumingyuan.github.io/helloworld/ |
-| Cloudflare Workers 文档 | https://developers.cloudflare.com/workers/ |
-| Cloudflare D1 文档 | https://developers.cloudflare.com/d1/ |
-| Wrangler CLI | https://developers.cloudflare.com/workers/wrangler/ |
+| `render.yaml` | https://github.com/oumingyuan/helloworld/blob/main/render.yaml |
+| GitHub Pages | https://oumingyuan.github.io/helloworld/ |
+| Render 控制台 | https://dashboard.render.com |
+| Render 文档 | https://render.com/docs |
+| Cloudflare Workers | https://developers.cloudflare.com/workers/ |
+| D1 | https://developers.cloudflare.com/d1/ |
 
 ---
 
-## 15. 版本与维护
+## 15. 维护
 
-- 文档路径：`docs/DOCUMENTATION.md`
-- 快速开始请先看根目录 `README.md`
-- 部署配置以 `wrangler.toml` 与 Cloudflare 控制台为准
+- 完整文档：`docs/DOCUMENTATION.md`  
+- 快速开始：`README.md`  
+- 国内部署以根目录 **`render.yaml`** 与 Render 控制台为准  
