@@ -1,0 +1,19 @@
+{
+  "name": "helloworld",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hello World landing page with Express + SQLite API",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

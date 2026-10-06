@@ -209,6 +209,127 @@
       line-height: 1.65;
     }
 
+    .board {
+      padding: clamp(3.5rem, 9vw, 6rem) clamp(1.5rem, 4vw, 3rem) 5rem;
+      background: linear-gradient(180deg, var(--sand) 0%, #fff7fa 100%);
+    }
+
+    .board__inner {
+      width: min(720px, 100%);
+      margin: 0 auto;
+    }
+
+    .board__head {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .board__head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      letter-spacing: -0.03em;
+    }
+
+    .board__head p {
+      margin: 0.75rem auto 0;
+      max-width: 32rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+
+    .board__form {
+      display: grid;
+      gap: 0.85rem;
+      margin-bottom: 1.75rem;
+      padding: 1.15rem;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(74, 31, 51, 0.1);
+      border-radius: 14px;
+    }
+
+    .board__form label {
+      display: grid;
+      gap: 0.35rem;
+      text-align: left;
+      font-family: var(--font-display);
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .board__form input,
+    .board__form textarea {
+      width: 100%;
+      border: 1px solid rgba(74, 31, 51, 0.18);
+      border-radius: 10px;
+      padding: 0.8rem 0.9rem;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+      resize: vertical;
+    }
+
+    .board__form input:focus,
+    .board__form textarea:focus {
+      outline: 2px solid rgba(224, 107, 138, 0.45);
+      border-color: var(--sea);
+    }
+
+    .board__status {
+      min-height: 1.4rem;
+      margin: 0.15rem 0 0;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .board__status[data-tone="error"] {
+      color: #a1284f;
+    }
+
+    .board__status[data-tone="ok"] {
+      color: var(--sea-deep);
+    }
+
+    .board__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .board__item {
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(74, 31, 51, 0.08);
+    }
+
+    .board__item strong {
+      font-family: var(--font-display);
+      font-size: 1rem;
+    }
+
+    .board__item time {
+      display: block;
+      margin-top: 0.2rem;
+      color: var(--ink-soft);
+      font-size: 0.85rem;
+    }
+
+    .board__item p {
+      margin: 0.55rem 0 0;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .board__empty {
+      text-align: center;
+      color: var(--ink-soft);
+      padding: 1rem 0;
+    }
+
     @keyframes rise-in {
       from {
         opacity: 0;
@@ -281,7 +402,7 @@
         <h1 class="brand"><span>Hello World</span></h1>
         <p class="lede">从一句问候开始，打开第一屏属于你的网页。</p>
         <div class="actions">
-          <a class="btn btn--primary" href="#about">继续往下看</a>
+          <a class="btn btn--primary" href="#board">留下问候</a>
           <a class="btn btn--ghost" href="https://github.com/oumingyuan/helloworld" rel="noopener noreferrer" target="_blank">查看仓库</a>
         </div>
       </div>
@@ -290,7 +411,31 @@
     <section class="about" id="about">
       <div class="about__inner" data-reveal>
         <h2>极简，但不空洞</h2>
-        <p>这是一个静态开场页：清晰的品牌呈现、一段说明，以及可继续探索的入口。没有多余模块，只保留第一印象该有的温度与层次。</p>
+        <p>页面负责展示与交互；Node API 负责读写；SQLite 负责持久化。这是最常见的「前端 → 后端 → 数据库」接法。</p>
+      </div>
+    </section>
+
+    <section class="board" id="board" aria-label="问候留言板">
+      <div class="board__inner">
+        <div class="board__head">
+          <h2>打个招呼</h2>
+          <p>提交后会经 <code>/api/greetings</code> 写入 SQLite，刷新仍在。</p>
+        </div>
+
+        <form class="board__form" id="greeting-form">
+          <label>
+            昵称
+            <input name="name" maxlength="40" required placeholder="你的名字" autocomplete="nickname">
+          </label>
+          <label>
+            留言
+            <textarea name="message" rows="3" maxlength="200" required placeholder="说一句 Hello"></textarea>
+          </label>
+          <button class="btn btn--primary" type="submit">写入数据库</button>
+          <p class="board__status" id="board-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <ul class="board__list" id="greeting-list"></ul>
       </div>
     </section>
   </main>
@@ -310,8 +455,92 @@
     } else if (reveal) {
       reveal.classList.add("is-visible");
     }
-    // Fallback so content never stays hidden if observation misses
     setTimeout(() => reveal && reveal.classList.add("is-visible"), 1200);
+
+    const API_BASE = window.HELLO_API_BASE || "";
+    const form = document.getElementById("greeting-form");
+    const listEl = document.getElementById("greeting-list");
+    const statusEl = document.getElementById("board-status");
+
+    function setStatus(text, tone) {
+      statusEl.textContent = text || "";
+      statusEl.dataset.tone = tone || "";
+    }
+
+    function formatTime(value) {
+      try {
+        return new Date(value.replace(" ", "T") + "Z").toLocaleString("zh-CN");
+      } catch {
+        return value;
+      }
+    }
+
+    function renderGreetings(items) {
+      if (!items.length) {
+        listEl.innerHTML = '<li class="board__empty">还没有留言，来写第一条吧。</li>';
+        return;
+      }
+
+      listEl.innerHTML = items
+        .map(
+          (item) => `
+            <li class="board__item">
+              <strong>${escapeHtml(item.name)}</strong>
+              <time datetime="${escapeHtml(item.created_at)}">${escapeHtml(formatTime(item.created_at))}</time>
+              <p>${escapeHtml(item.message)}</p>
+            </li>`
+        )
+        .join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function loadGreetings() {
+      try {
+        const res = await fetch(`${API_BASE}/api/greetings`);
+        if (!res.ok) throw new Error("load failed");
+        const data = await res.json();
+        renderGreetings(data.items || []);
+        setStatus("");
+      } catch {
+        renderGreetings([]);
+        setStatus("连不上 API。请先运行 npm start（不要只用 GitHub Pages 静态打开）。", "error");
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const payload = {
+        name: String(formData.get("name") || "").trim(),
+        message: String(formData.get("message") || "").trim(),
+      };
+
+      setStatus("正在写入…");
+      try {
+        const res = await fetch(`${API_BASE}/api/greetings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "save failed");
+        form.reset();
+        setStatus("已写入 SQLite。", "ok");
+        await loadGreetings();
+      } catch (error) {
+        setStatus(error.message || "保存失败", "error");
+      }
+    });
+
+    loadGreetings();
   </script>
 </body>
 </html>
