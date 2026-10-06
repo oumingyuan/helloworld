@@ -1,37 +1,26 @@
 # Hello World
 
-粉色主题开场页 + 留言板。
+粉色主题开场页 + 留言板，示范：
 
-## 公网地址（已上线）
+**页面 → API → 数据库（Cloudflare Workers + D1）**
 
-https://helloworld.invented-hibiscus.workers.dev/
+## 文档
 
-> 这是 Cloudflare **临时预览账号**部署。请在 **60 分钟内认领**，否则可能失效：  
-> https://dash.cloudflare.com/claim-preview?claimToken=g3f-k5ho0Cy9CH_7qoFHtfyldPSiHDq8s4YQNDt_Vak
+完整说明（架构、接口、部署、国内网络写库问题等）：
 
-## 为什么选 Cloudflare Workers + D1
+**[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)**
 
-对这个小项目，它是最合适的免费方案：
+## 公网地址
 
-- **真正长期免费额度**（个人小流量足够）
-- **D1 = 托管 SQLite**，和本地 SQLite 概念一致，数据可持久
-- **同一域名**同时提供静态页和 API，不用拆 GitHub Pages + 另一台服务器
-- 冷启动比多数免费 Node 主机更友好
+- Worker（可写库）：https://helloworld.invented-hibiscus.workers.dev/
+- GitHub Pages（仅静态）：https://oumingyuan.github.io/helloworld/
 
-> GitHub Pages 仍可看静态皮，但**不能留言落库**。公网留言请用上面的 Worker 地址。
+> 国内直连 `*.workers.dev` 常出现「能打开/外网能写，国内不能写」。详见完整文档第 9 节。
 
-## 架构
+临时预览账号认领（若仍在有效期）：  
+https://dash.cloudflare.com/claim-preview?claimToken=g3f-k5ho0Cy9CH_7qoFHtfyldPSiHDq8s4YQNDt_Vak
 
-```
-浏览器
-  │
-  ▼
-Cloudflare Worker  ──静态页──► public/
-  │
-  └── /api/greetings ──SQL──► D1 (SQLite)
-```
-
-## 本地开发
+## 快速开始
 
 ```bash
 npm install
@@ -39,31 +28,14 @@ npm run db:migrate:local
 npm run dev
 ```
 
-打开终端提示的本地地址（一般是 http://127.0.0.1:8787）。
+浏览器打开 `http://127.0.0.1:8787`。
 
-## 再次部署到公网
+## 常用命令
 
-若已认领临时账号，或你自己登录了 Cloudflare：
-
-```bash
-npx wrangler login
-npm run db:migrate
-npx wrangler deploy
-```
-
-## 接口
-
-- `GET /api/health`
-- `GET /api/greetings`
-- `POST /api/greetings`  body: `{ "name", "message" }`
-
-## 可选：本机 Express + 文件版 SQLite
-
-仅本地实验时仍可用：
-
-```bash
-npm install better-sqlite3 cors express
-npm run start:node
-```
-
-公网请优先用上面的 Cloudflare 方案。
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 本地 Worker |
+| `npm run deploy` | 部署到 Cloudflare |
+| `npm run db:migrate:local` | 本地 D1 迁移 |
+| `npm run db:migrate` | 远程 D1 迁移 |
+| `npm run start:node` | 可选：本机 Express + 文件 SQLite |
