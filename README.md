@@ -1,44 +1,71 @@
 # Hello World
 
-粉色主题开场页，并示范最常见的数据库接法：
+粉色主题开场页 + 留言板。
 
-**页面 → Express API → SQLite**
+## 为什么选 Cloudflare Workers + D1
 
-> GitHub Pages 只能托管静态文件，**不能跑这个 API**。本地或云主机用 `npm start` 才会真正连上数据库。
+对这个小项目，它是最合适的免费方案：
 
-在线静态预览：https://oumingyuan.github.io/helloworld/
+- **真正长期免费额度**（个人小流量足够）
+- **D1 = 托管 SQLite**，和本地 SQLite 概念一致，数据可持久
+- **同一域名**同时提供静态页和 API，不用拆 GitHub Pages + 另一台服务器
+- 冷启动比多数免费 Node 主机更友好
+
+> GitHub Pages 仍可看静态皮，但**不能留言落库**。公网留言请用本 Worker 部署地址。
 
 ## 架构
 
 ```
-浏览器 index.html
-   │  fetch /api/greetings
-   ▼
-Express (server/index.js)
-   │  SQL
-   ▼
-SQLite (data/helloworld.sqlite)
+浏览器
+  │
+  ▼
+Cloudflare Worker  ──静态页──► public/
+  │
+  └── /api/greetings ──SQL──► D1 (SQLite)
 ```
 
-## 本地启动
+## 本地开发
 
 ```bash
 npm install
-npm start
+npm run db:migrate:local
+npm run dev
 ```
 
-打开 http://localhost:3000
+打开终端提示的本地地址（一般是 http://127.0.0.1:8787）。
 
-- `GET /api/health`：健康检查
-- `GET /api/greetings`：读取留言
-- `POST /api/greetings`：写入留言 `{ "name", "message" }`
+## 免费部署到公网（一次）
 
-数据库文件默认在 `data/helloworld.sqlite`，可用环境变量覆盖：
+1. 注册 [Cloudflare](https://dash.cloudflare.com/)（免费账号即可）
+2. 登录 CLI：
+   ```bash
+   npx wrangler login
+   ```
+3. 创建 D1 数据库：
+   ```bash
+   npx wrangler d1 create helloworld
+   ```
+4. 把输出的 `database_id` 填进 `wrangler.toml` 里对应字段
+5. 执行远程迁移并部署：
+   ```bash
+   npm run db:migrate
+   npm run deploy
+   ```
+6. 使用命令输出的 `*.workers.dev` 地址访问（可留言、可持久化）
+
+## 接口
+
+- `GET /api/health`
+- `GET /api/greetings`
+- `POST /api/greetings`  body: `{ "name", "message" }`
+
+## 可选：本机 Express + 文件版 SQLite
+
+仅本地实验时仍可用：
 
 ```bash
-DATABASE_PATH=/tmp/hello.sqlite PORT=3000 npm start
+npm install better-sqlite3 cors express
+npm run start:node
 ```
 
-## 换成 Postgres / MySQL
-
-把 `server/db.js` 里的 `better-sqlite3` 换成对应驱动（如 `pg`、`mysql2`），连接串放在服务端环境变量，**不要写进前端**。前端接口路径可以保持不变。
+公网请优先用上面的 Cloudflare 方案。

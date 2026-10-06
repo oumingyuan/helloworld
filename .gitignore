@@ -4,3 +4,6 @@ data/
 *.sqlite-journal
 .env
 .DS_Store
+.wrangler/
+.dev.vars
+dist/

@@ -1,0 +1,15 @@
+name = "helloworld"
+main = "src/worker.js"
+compatibility_date = "2025-10-01"
+
+# 首次部署：npx wrangler d1 create helloworld
+# 把输出的 database_id 填到下面，再执行 npm run db:migrate
+[[d1_databases]]
+binding = "DB"
+database_name = "helloworld"
+database_id = "00000000-0000-0000-0000-000000000001"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
