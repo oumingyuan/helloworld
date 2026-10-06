@@ -10,6 +10,13 @@
 
 **[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)**
 
+## 工程约定
+
+- **前端唯一源目录**：`public/`（`index.html` + `styles.css` + `app.js`）
+- 根目录同名文件由 `npm run sync:pages` 同步，供 GitHub Pages 使用
+- **默认后端**：Cloudflare Worker + D1；`server/` 仅为可选本机 Express
+- CI：安装依赖、同步校验、本地 D1 迁移、`wrangler deploy --dry-run`
+
 ## 公网地址
 
 - Worker（可写库）：https://helloworld.invented-hibiscus.workers.dev/

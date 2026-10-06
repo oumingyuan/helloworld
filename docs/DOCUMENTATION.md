@@ -102,15 +102,25 @@ better-sqlite3 → data/helloworld.sqlite
 ├── migrations/
 │   └── 0001_init.sql         # D1 初始表结构
 ├── src/
-│   └── worker.js             # Worker：静态页 + API + D1
-├── public/
-│   └── index.html            # 前端页面（Worker 静态资源）
-├── index.html                # 与 public 同步，便于 GitHub Pages 预览
-├── server/
-│   ├── index.js              # 可选：Express 入口
-│   └── db.js                 # 可选：本机 SQLite 封装
+│   └── worker.js             # Worker：静态页 + API + D1（默认后端）
+├── public/                   # 前端唯一源
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+├── index.html / styles.css / app.js
+│                           # 由 npm run sync:pages 从 public/ 同步（GitHub Pages）
+├── scripts/
+│   ├── sync-pages.mjs        # public → 根目录同步
+│   └── check-sync.mjs        # CI 校验无漂移
+├── .github/workflows/ci.yml  # CI
+├── server/                   # 可选本机 Express（非默认）
+│   ├── README.md
+│   ├── index.js
+│   └── db.js
 └── data/                     # 本机 SQLite 数据目录（gitignore）
 ```
+
+工程约定：改前端只改 `public/`，再执行 `npm run sync:pages`（`dev` / `deploy` 会自动跑）。
 
 ---
 

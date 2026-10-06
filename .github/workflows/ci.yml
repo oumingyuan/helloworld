@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Sync check (public ↔ root)
+        run: npm run check:sync
+
+      - name: Local D1 migrate
+        run: npm run db:migrate:local
+
+      - name: Smoke worker bundle
+        run: npx wrangler deploy --dry-run

@@ -1,14 +1,16 @@
 {
   "name": "helloworld",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Hello World with Cloudflare Workers + D1",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "npm run sync:pages && wrangler dev",
+    "deploy": "npm run sync:pages && wrangler deploy",
     "db:migrate:local": "wrangler d1 migrations apply helloworld --local",
     "db:migrate": "wrangler d1 migrations apply helloworld --remote",
+    "sync:pages": "node scripts/sync-pages.mjs",
+    "check:sync": "node scripts/check-sync.mjs",
     "start:node": "node server/index.js"
   },
   "devDependencies": {
