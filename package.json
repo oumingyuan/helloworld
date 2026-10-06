@@ -1,16 +1,18 @@
 {
   "name": "helloworld",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "Hello World — Render (国内可达) / Cloudflare Workers",
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "dev:node": "node --watch server/index.js",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "npm run sync:pages && wrangler dev",
+    "deploy": "npm run sync:pages && wrangler deploy",
     "db:migrate:local": "wrangler d1 migrations apply helloworld --local",
-    "db:migrate": "wrangler d1 migrations apply helloworld --remote"
+    "db:migrate": "wrangler d1 migrations apply helloworld --remote",
+    "sync:pages": "node scripts/sync-pages.mjs",
+    "check:sync": "node scripts/check-sync.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",

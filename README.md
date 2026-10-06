@@ -8,30 +8,30 @@ Cloudflare `*.workers.dev` 在大陆常被屏蔽，不要当国内入口。
 ## 文档
 
 - 完整说明：[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)
-- Render 配置文件（仓库根目录）：[render.yaml](./render.yaml)  
-  GitHub 直链：https://github.com/oumingyuan/helloworld/blob/main/render.yaml
+- Render 配置（仓库根目录）：[render.yaml](./render.yaml)  
+  https://github.com/oumingyuan/helloworld/blob/main/render.yaml
+
+## 工程约定
+
+- **前端唯一源**：`public/`（`index.html` + `styles.css` + `app.js`）
+- 根目录同名文件由 `npm run sync:pages` 同步（GitHub Pages 用）
+- **默认后端**：Express + SQLite（`npm start` / Render）
+- Cloudflare Worker 为备选；CI 含同步校验与 dry-run
 
 ## 用 Render 免费上公网（推荐）
 
 1. 打开 [Render Dashboard](https://dashboard.render.com)（可用 GitHub 登录）
 2. 点 **New → Blueprint**
 3. 选择仓库 `oumingyuan/helloworld`，分支选 `main`
-4. Render 会自动读取根目录的 **`render.yaml`**
-5. 确认创建后等待 Build / Deploy
-6. 打开分配的地址，例如：`https://helloworld-xxxx.onrender.com`  
-   在「打个招呼」里提交留言，验证写库
+4. Render 会自动读取根目录 **`render.yaml`**
+5. 等待 Build / Deploy
+6. 打开 `https://helloworld-xxxx.onrender.com`，测试留言写库
 
 ### 找不到 yaml？
 
-文件就在仓库**最外层**（和 `README.md`、`package.json` 同级），文件名是：
+与 `README.md`、`package.json` **同级**，文件名：`render.yaml`（不在 `docs/` 里）。
 
-```text
-render.yaml
-```
-
-不是在 `docs/` 或 `server/` 里面。
-
-### 不用 Blueprint 时手动创建 Web Service
+### 手动 Web Service
 
 | 项 | 值 |
 |----|-----|
@@ -41,10 +41,7 @@ render.yaml
 | Instance | Free |
 | Health Check Path | `/api/health` |
 
-### 免费档注意
-
-- 一段时间无访问会**休眠**，冷启动可能 30–60 秒
-- 磁盘**不持久**，重新部署后 SQLite 留言可能被清空（演示够用）
+免费档会休眠（冷启动 30–60 秒）；磁盘不持久，重部署可能清空 SQLite。
 
 ## 本地运行（可写库）
 
@@ -55,9 +52,15 @@ npm start
 
 打开 http://localhost:3000
 
+改前端后同步 Pages 副本：
+
+```bash
+npm run sync:pages
+```
+
 ## 备选：Cloudflare Workers + D1
 
-仅建议绑**自己的域名**后给国内用；裸 `workers.dev` 不可用。
+仅建议绑**自己的域名**；裸 `workers.dev` 不可用。
 
 ```bash
 npm run db:migrate:local

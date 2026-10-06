@@ -72,24 +72,33 @@ Cloudflare Worker (src/worker.js)
 ```text
 .
 ├── README.md                 # 快速入门
-├── render.yaml               # Render Blueprint（国内部署用，在仓库根目录）
+├── render.yaml               # Render Blueprint（仓库根目录）
 ├── docs/
 │   └── DOCUMENTATION.md      # 本完整文档
 ├── package.json
-├── public/
-│   └── index.html            # 前端页面
+├── public/                   # 前端唯一源
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+├── index.html / styles.css / app.js
+│                           # 由 npm run sync:pages 同步（GitHub Pages）
+├── scripts/
+│   ├── sync-pages.mjs
+│   └── check-sync.mjs
+├── .github/workflows/ci.yml  # CI：同步校验 / 迁移 / dry-run
 ├── server/
 │   ├── README.md
-│   ├── index.js              # Express 入口（Render / 本地默认）
-│   └── db.js                 # SQLite 封装
+│   ├── index.js              # Express（Render / 本地默认）
+│   └── db.js
 ├── src/
 │   └── worker.js             # Cloudflare Worker（备选）
 ├── migrations/
-│   └── 0001_init.sql         # D1 迁移（仅 Workers 用）
-├── wrangler.toml             # Cloudflare 配置（备选）
-├── index.html                # 同步给 GitHub Pages 的静态副本
-└── data/                     # SQLite 数据目录（gitignore）
+│   └── 0001_init.sql
+├── wrangler.toml
+└── data/
 ```
+
+工程约定：改前端只改 `public/`，再执行 `npm run sync:pages`（`dev` / `deploy` 会自动跑）。
 
 ### `render.yaml` 在哪？
 
