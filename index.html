@@ -89,9 +89,7 @@
     .stage {
       width: min(920px, 100%);
       text-align: center;
-      transform: translateY(18px);
-      opacity: 0;
-      animation: rise-in 1.1s var(--ease) 0.15s forwards;
+      animation: rise-in 1.1s var(--ease) both;
     }
 
     .brand {
@@ -180,14 +178,19 @@
       width: min(680px, 100%);
       margin: 0 auto;
       text-align: center;
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
     }
 
-    .about__inner.is-visible {
-      opacity: 1;
-      transform: translateY(0);
+    @media (prefers-reduced-motion: no-preference) {
+      .about__inner {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+      }
+
+      .about__inner.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .about h2 {
@@ -207,6 +210,10 @@
     }
 
     @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
       to {
         opacity: 1;
         transform: translateY(0);
@@ -263,10 +270,10 @@
               <stop offset="100%" stop-color="#f7fbfc" stop-opacity="0.15"/>
             </linearGradient>
           </defs>
-          <path fill="url(#water)" d="M0 120 C180 70 320 180 480 140 C640 100 760 40 920 80 C1080 120 1240 170 1440 110 L1440 420 L0 420 Z"/>
-          <path fill="url(#foam)" d="M0 168 C220 118 360 210 540 170 C720 130 860 90 1040 140 C1180 178 1320 150 1440 128 L1440 210 C1280 240 1140 250 980 210 C780 160 620 210 440 250 C260 288 120 240 0 220 Z"/>
-          <circle cx="1080" cy="70" r="54" fill="#e8b86d" opacity="0.9"/>
-          <circle cx="1080" cy="70" r="78" fill="#e8b86d" opacity="0.18"/>
+          <path fill="url(#water)" d="M0 150 C240 90 360 210 540 160 C720 110 860 70 1040 120 C1200 160 1320 140 1440 100 L1440 420 L0 420 Z"/>
+          <path fill="url(#foam)" d="M0 190 C200 140 340 230 520 190 C700 150 860 120 1040 165 C1200 205 1320 180 1440 155 L1440 250 C1280 280 1120 290 940 250 C740 200 580 250 400 285 C240 318 120 270 0 250 Z"/>
+          <circle cx="1120" cy="88" r="48" fill="#e8b86d" opacity="0.92"/>
+          <circle cx="1120" cy="88" r="72" fill="#e8b86d" opacity="0.16"/>
         </svg>
       </div>
 
@@ -303,6 +310,8 @@
     } else if (reveal) {
       reveal.classList.add("is-visible");
     }
+    // Fallback so content never stays hidden if observation misses
+    setTimeout(() => reveal && reveal.classList.add("is-visible"), 1200);
   </script>
 </body>
 </html>
