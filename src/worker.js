@@ -13,6 +13,17 @@ export default {
   },
 };
 
+async function ensureSchema(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS greetings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`
+  ).run();
+}
+
 async function handleApi(request, env, url) {
   const headers = {
     "Content-Type": "application/json; charset=utf-8",
@@ -26,6 +37,8 @@ async function handleApi(request, env, url) {
   }
 
   try {
+    await ensureSchema(env);
+
     if (url.pathname === "/api/health" && request.method === "GET") {
       return json({ ok: true, database: "cloudflare-d1" }, headers);
     }
@@ -68,7 +81,14 @@ async function handleApi(request, env, url) {
     return json({ error: "未找到接口" }, headers, 404);
   } catch (error) {
     console.error(error);
-    return json({ error: "服务暂时不可用" }, headers, 500);
+    return json(
+      {
+        error: "服务暂时不可用",
+        detail: String(error?.message || error),
+      },
+      headers,
+      500
+    );
   }
 }
 

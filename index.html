@@ -502,13 +502,13 @@
     async function loadGreetings() {
       try {
         const res = await fetch(`${API_BASE}/api/greetings`);
-        if (!res.ok) throw new Error("load failed");
+        if (!res.ok) throw new Error(`load failed (${res.status})`);
         const data = await res.json();
         renderGreetings(data.items || []);
         setStatus("");
       } catch {
         renderGreetings([]);
-        setStatus("连不上 API。请先运行 npm run dev（Cloudflare Worker + D1），不要只用静态页打开。", "error");
+        setStatus("当前网络连不上 Cloudflare API（国内访问 *.workers.dev 常失败；开外网/代理一般可写库）。", "error");
       }
     }
 
@@ -528,12 +528,21 @@
           body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || "save failed");
+        if (!res.ok) {
+          throw new Error(data.error || `写入失败（HTTP ${res.status}）`);
+        }
         form.reset();
         setStatus("已写入 D1 数据库。", "ok");
         await loadGreetings();
       } catch (error) {
-        setStatus(error.message || "保存失败", "error");
+        const msg = String(error?.message || "保存失败");
+        const networkLike = /failed|network|fetch|load failed/i.test(msg);
+        setStatus(
+          networkLike
+            ? "写入失败：当前网络无法到达 Cloudflare。请切换外网，或绑定自己的域名后再试。"
+            : msg,
+          "error"
+        );
       }
     });
 
