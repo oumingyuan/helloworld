@@ -1,41 +1,55 @@
 # Hello World
 
-粉色主题开场页 + 留言板，示范：
+粉色主题开场页 + 留言板。
 
-**页面 → API → 数据库（Cloudflare Workers + D1）**
+**国内推荐：Render 免费部署**（`*.onrender.com`，一般可直连写库）  
+Cloudflare `workers.dev` 在大陆常被拦截，仅作备选。
 
 ## 文档
 
-完整说明（架构、接口、部署、国内网络写库问题等）：
+完整说明：[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)
 
-**[docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)**
+## 用 Render 免费上公网（推荐）
 
-## 公网地址
+1. 打开 [https://dashboard.render.com](https://dashboard.render.com) 注册（可用 GitHub 登录）
+2. **New → Blueprint**，选择本仓库 `oumingyuan/helloworld`，应用 `render.yaml`
+3. 等待 Build / Deploy 完成
+4. 打开分配的地址：`https://helloworld-xxxx.onrender.com`
 
-- Worker（可写库）：https://helloworld.invented-hibiscus.workers.dev/
-- GitHub Pages（仅静态）：https://oumingyuan.github.io/helloworld/
+也可 **New → Web Service** 手动填：
 
-> 国内直连 `*.workers.dev` 常出现「能打开/外网能写，国内不能写」。详见完整文档第 9 节。
+| 项 | 值 |
+|----|-----|
+| Runtime | Node |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Instance | Free |
 
-临时预览账号认领（若仍在有效期）：  
-https://dash.cloudflare.com/claim-preview?claimToken=g3f-k5ho0Cy9CH_7qoFHtfyldPSiHDq8s4YQNDt_Vak
+注意：
 
-## 快速开始
+- 免费实例**一段时间无访问会休眠**，第一次打开可能要等 30–60 秒  
+- 免费盘**不持久**，重新部署后 SQLite 留言可能清空（演示够用；要持久可再接免费 Postgres）
+
+## 本地运行（可写库）
 
 ```bash
 npm install
+npm start
+```
+
+打开 http://localhost:3000
+
+## 备选：Cloudflare Workers + D1
+
+```bash
 npm run db:migrate:local
 npm run dev
 ```
 
-浏览器打开 `http://127.0.0.1:8787`。
+公网需自有域名绑 Worker；不要依赖裸 `*.workers.dev` 给国内用户。
 
-## 常用命令
+## 接口
 
-| 命令 | 说明 |
-|------|------|
-| `npm run dev` | 本地 Worker |
-| `npm run deploy` | 部署到 Cloudflare |
-| `npm run db:migrate:local` | 本地 D1 迁移 |
-| `npm run db:migrate` | 远程 D1 迁移 |
-| `npm run start:node` | 可选：本机 Express + 文件 SQLite |
+- `GET /api/health`
+- `GET /api/greetings`
+- `POST /api/greetings` body: `{ "name", "message" }`

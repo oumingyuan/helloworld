@@ -296,22 +296,23 @@ npm run deploy
 
 ### 9.1 现象
 
-- **外网 / 代理**：留言可以成功写入 D1  
-- **国内直连**：页面可能能开，但写库失败或接口超时  
+- **外网 / 代理**：留言可以成功写入  
+- **国内直连 `*.workers.dev`**：常失败或超时  
 
-### 9.2 原因
+### 9.2 原因（已核实）
 
-这通常**不是** SQL 写错，而是国内访问 Cloudflare `*.workers.dev` 链路不稳定或被干扰，导致浏览器 `fetch('/api/greetings')` 失败。
+1. **主因**：大陆对 `workers.dev` 整类域名屏蔽（DNS 污染 / 连接干扰），与业务代码无关  
+2. **次因**：GitHub Pages 只有静态页，同源 `/api/greetings` 不存在（405/404）
 
-GitHub Pages 上的静态站**没有**该 API，在 Pages 域名下提交留言也必然失败。
+本机 `npm start`（Express + SQLite）读写正常，说明数据库逻辑本身没问题。
 
-### 9.3 怎么办
+### 9.3 怎么办（推荐顺序）
 
-按优先级：
+1. **Render 免费部署**（本仓库已提供 `render.yaml`）→ 使用 `*.onrender.com`，国内通常可直连写库  
+2. 自有域名绑定到 Cloudflare Worker（不要用裸 workers.dev）  
+3. 临时用外网验证功能  
 
-1. **绑定自己的域名到 Worker**（认领/登录 Cloudflare 后配置自定义域），一般比 `workers.dev` 更稳  
-2. 临时用外网验证功能是否正常  
-3. 若必须国内直连长期可用，可改托管到更易访问的平台（如 Render 等），并继续保持「页面 → API → 数据库」结构  
+Render 注意：免费实例会休眠；免费磁盘不持久，重部署可能丢 SQLite 数据。
 
 ---
 

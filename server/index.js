@@ -1,19 +1,28 @@
-const path = require("path");
-const express = require("express");
-const cors = require("cors");
-const { dbPath, listGreetings, createGreeting } = require("./db");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import express from "express";
+import cors from "cors";
+import { dbPath, listGreetings, createGreeting } from "./db.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.join(__dirname, "..");
+const publicDir = path.join(rootDir, "public");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: "16kb" }));
-app.use(express.static(path.join(__dirname, "..")));
+
+// 优先 public/，兼容根目录静态文件
+app.use(express.static(publicDir));
+app.use(express.static(rootDir));
 
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     database: dbPath,
+    host: process.env.RENDER ? "render" : "node",
   });
 });
 
@@ -44,7 +53,7 @@ app.post("/api/greetings", (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Hello World API running at http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Hello World API running at http://0.0.0.0:${PORT}`);
   console.log(`SQLite file: ${dbPath}`);
 });

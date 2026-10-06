@@ -1,8 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const Database = require("better-sqlite3");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import Database from "better-sqlite3";
 
-const dataDir = path.join(__dirname, "..", "data");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dataDir = process.env.DATABASE_DIR || path.join(__dirname, "..", "data");
+
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
@@ -21,7 +24,7 @@ db.exec(`
   );
 `);
 
-function listGreetings(limit = 20) {
+export function listGreetings(limit = 20) {
   return db
     .prepare(
       `SELECT id, name, message, created_at
@@ -32,7 +35,7 @@ function listGreetings(limit = 20) {
     .all(limit);
 }
 
-function createGreeting(name, message) {
+export function createGreeting(name, message) {
   const result = db
     .prepare(`INSERT INTO greetings (name, message) VALUES (?, ?)`)
     .run(name, message);
@@ -46,8 +49,4 @@ function createGreeting(name, message) {
     .get(result.lastInsertRowid);
 }
 
-module.exports = {
-  dbPath,
-  listGreetings,
-  createGreeting,
-};
+export { dbPath };

@@ -408,7 +408,7 @@
     <section class="about" id="about">
       <div class="about__inner" data-reveal>
         <h2>极简，但不空洞</h2>
-        <p>页面与接口都跑在 Cloudflare Worker 上，数据落在 D1（托管 SQLite）。免费档即可公网访问，也是本项目的推荐部署方式。</p>
+        <p>推荐用 Render 部署（国内通常可直连写库）。也支持 Cloudflare Workers + D1（国内访问 workers.dev 常被拦）。</p>
       </div>
     </section>
 
@@ -416,7 +416,7 @@
       <div class="board__inner">
         <div class="board__head">
           <h2>打个招呼</h2>
-          <p>提交后会经 <code>/api/greetings</code> 写入 Cloudflare D1（托管 SQLite），刷新仍在。</p>
+          <p>提交后会经 <code>/api/greetings</code> 写入 SQLite。请用 Render 地址或本地 <code>npm start</code>，不要只用 GitHub Pages。</p>
         </div>
 
         <form class="board__form" id="greeting-form">
@@ -508,7 +508,7 @@
         setStatus("");
       } catch {
         renderGreetings([]);
-        setStatus("当前网络连不上 Cloudflare API（国内访问 *.workers.dev 常失败；开外网/代理一般可写库）。", "error");
+        setStatus("连不上 API。请打开 Render 部署地址，或本地运行 npm start（GitHub Pages 不能写库）。", "error");
       }
     }
 
@@ -532,14 +532,14 @@
           throw new Error(data.error || `写入失败（HTTP ${res.status}）`);
         }
         form.reset();
-        setStatus("已写入 D1 数据库。", "ok");
+        setStatus("已写入数据库。", "ok");
         await loadGreetings();
       } catch (error) {
         const msg = String(error?.message || "保存失败");
         const networkLike = /failed|network|fetch|load failed/i.test(msg);
         setStatus(
           networkLike
-            ? "写入失败：当前网络无法到达 Cloudflare。请切换外网，或绑定自己的域名后再试。"
+            ? "写入失败：当前页面没有可用 API。请使用 Render 部署地址，或本地 npm start。"
             : msg,
           "error"
         );
